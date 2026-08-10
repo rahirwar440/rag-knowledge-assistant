@@ -3,6 +3,7 @@ import shutil
 from fastapi import FastAPI, UploadFile, File
 from pydantic import BaseModel
 from dotenv import load_dotenv
+from fastapi.staticfiles import StaticFiles
 
 load_dotenv()
 groq_api_key = os.getenv("GROQ_API_KEY")
@@ -123,6 +124,8 @@ async def chat(request: ChatRequest):
     }
 
 
-@app.get("/")
-async def root():
-    return {"message": "RAG Knowledge Assistant is running. Go to /docs to try it out."}
+# @app.get("/")
+# async def root():
+#     return {"message": "RAG Knowledge Assistant is running. Go to /docs to try it out."}
+
+app.mount("/", StaticFiles(directory="static", html=True), name="static")
