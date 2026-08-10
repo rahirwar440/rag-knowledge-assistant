@@ -64,7 +64,6 @@ class ChatRequest(BaseModel):
 async def upload_file(file: UploadFile = File(...)):
     global vectorstore, retriever
 
-    from langchain_community.document_loaders import PyPDFLoader
     from langchain_text_splitters import RecursiveCharacterTextSplitter
     from langchain_chroma import Chroma
 
@@ -72,8 +71,18 @@ async def upload_file(file: UploadFile = File(...)):
     with open(file_path, "wb") as f:
         shutil.copyfileobj(file.file, f)
 
-    loader = PyPDFLoader(file_path)
-    documents = loader.load()
+    ext = file.filename.lower().split(".")[-1]
+
+    if ext == "pdf":
+        from langchain_community.document_loaders import PyPDFLoader
+        loader = PyPDFLoader(file_path)
+        documents = loader.load()
+    elif ext == "csv":
+        from langchain_community.document_loaders import CSVLoader
+        loader = CSVLoader(file_path)
+        documents = loader.load()
+    else:
+        return {"error": f"Unsupported file type: .{ext}. Please upload a PDF or CSV."}
 
     splitter = RecursiveCharacterTextSplitter(chunk_size=500, chunk_overlap=100)
     chunks = splitter.split_documents(documents)
@@ -89,6 +98,44 @@ async def upload_file(file: UploadFile = File(...)):
 
     return {
         "filename": file.filename,
+        "pages_loaded": len(documents),
+        "chunks_created": len(chunks),
+        "status": "success"
+    }
+
+
+class URLRequest(BaseModel):
+    url: str
+
+
+@app.post("/upload-url")
+async def upload_url(request: URLRequest):
+    global vectorstore, retriever
+
+    from langchain_community.document_loaders import WebBaseLoader
+    from langchain_text_splitters import RecursiveCharacterTextSplitter
+    from langchain_chroma import Chroma
+
+    try:
+        loader = WebBaseLoader(request.url)
+        documents = loader.load()
+    except Exception as e:
+        return {"error": f"Could not load URL: {str(e)}"}
+
+    splitter = RecursiveCharacterTextSplitter(chunk_size=500, chunk_overlap=100)
+    chunks = splitter.split_documents(documents)
+
+    emb = get_embeddings()
+
+    if vectorstore is None:
+        vectorstore = Chroma.from_documents(chunks, emb)
+    else:
+        vectorstore.add_documents(chunks)
+
+    retriever = vectorstore.as_retriever(search_kwargs={"k": 3})
+
+    return {
+        "filename": request.url,
         "pages_loaded": len(documents),
         "chunks_created": len(chunks),
         "status": "success"

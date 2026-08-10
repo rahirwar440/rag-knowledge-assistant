@@ -69,6 +69,14 @@
     flex: 1;
     font-size: 13px;
   }
+  .upload-row input[type="text"] {
+  flex: 1;
+  font-size: 13px;
+  padding: 8px 10px;
+  border-radius: 8px;
+  border: 1px solid var(--border);
+  font-family: inherit;
+}
   button {
     font-family: inherit;
     font-size: 14px;
@@ -197,8 +205,12 @@
 
 <div class="upload-panel">
   <div class="upload-row">
-    <input type="file" id="file-input" accept=".pdf" />
-    <button id="upload-btn">Upload PDF</button>
+    <input type="file" id="file-input" accept=".pdf,.csv" />
+    <button id="upload-btn">Upload File</button>
+  </div>
+  <div class="upload-row" style="margin-top: 10px;">
+    <input type="text" id="url-input" placeholder="Or paste a URL to fetch content from..." />
+    <button id="url-btn">Fetch URL</button>
   </div>
   <div class="upload-msg" id="upload-msg"></div>
 </div>
@@ -219,6 +231,8 @@
 <script>
   const fileInput = document.getElementById('file-input');
   const uploadBtn = document.getElementById('upload-btn');
+  const urlBtn = document.getElementById('url-btn');
+  const urlInput = document.getElementById('url-input');
   const uploadMsg = document.getElementById('upload-msg');
   const statusEl = document.getElementById('status');
   const messagesEl = document.getElementById('messages');
@@ -268,6 +282,46 @@
       uploadBtn.textContent = 'Upload PDF';
     }
   });
+  urlBtn.addEventListener('click', async () => {
+  const url = urlInput.value.trim();
+  if (!url) {
+    uploadMsg.textContent = 'Paste a URL first.';
+    uploadMsg.className = 'upload-msg error';
+    return;
+  }
+
+  urlBtn.disabled = true;
+  urlBtn.textContent = 'Fetching...';
+  uploadMsg.textContent = '';
+  uploadMsg.className = 'upload-msg';
+
+  try {
+    const res = await fetch('/upload-url', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ url })
+    });
+    const data = await res.json();
+
+    if (data.error) throw new Error(data.error);
+
+    uploadMsg.textContent = `URL processed — ${data.chunks_created} chunks indexed.`;
+    uploadMsg.className = 'upload-msg success';
+
+    hasDocument = true;
+    statusEl.textContent = `Ready — ${url}`;
+    statusEl.className = 'status ready';
+    questionInput.disabled = false;
+    sendBtn.disabled = false;
+    questionInput.focus();
+  } catch (err) {
+    uploadMsg.textContent = 'Error: ' + err.message;
+    uploadMsg.className = 'upload-msg error';
+  } finally {
+    urlBtn.disabled = false;
+    urlBtn.textContent = 'Fetch URL';
+  }
+});
 
   chatForm.addEventListener('submit', async (e) => {
     e.preventDefault();
