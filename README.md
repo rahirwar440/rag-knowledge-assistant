@@ -2,7 +2,7 @@
 
 A production-ready **Retrieval-Augmented Generation (RAG)** system that lets you upload documents — PDFs, CSVs, or web URLs — and chat with an LLM about their contents, with accurate source citations.
 
-🔗 **Live Demo**: [https://rag-knowledge-assistant.onrender.com](https://rag-knowledge-assistant.onrender.com)
+🔗 **Live Demo**: [https://rag-knowledge-assistant-uttc.onrender.com](https://rag-knowledge-assistant-uttc.onrender.com)
 📦 **Repo**: [github.com/rahirwar440/rag-knowledge-assistant](https://github.com/rahirwar440/rag-knowledge-assistant)
 
 ## 🎯 What It Does
