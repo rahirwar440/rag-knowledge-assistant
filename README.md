@@ -2,7 +2,7 @@
 
 A production-ready **Retrieval-Augmented Generation (RAG)** system that lets you upload documents — PDFs, CSVs, or web URLs — and chat with an LLM about their contents, with accurate source citations.
 
-🔗 **Live Demo**: [https://rag-knowledge-assistant-uttc.onrender.com](https://rag-knowledge-assistant-uttc.onrender.com)
+🔗 **Live Demo**: [https://rag-knowledge-assistant.onrender.com](https://rag-knowledge-assistant.onrender.com)
 📦 **Repo**: [github.com/rahirwar440/rag-knowledge-assistant](https://github.com/rahirwar440/rag-knowledge-assistant)
 
 ## 🎯 What It Does
@@ -30,6 +30,7 @@ User Query → Retriever (top-k similarity search) → Groq LLM (Llama 3.1) → 
 | Vector Database | ChromaDB |
 | Embeddings | Hugging Face Inference API (`all-MiniLM-L6-v2`) |
 | LLM | Groq (Llama 3.1 8B Instant) |
+| Evaluation | Ragas (faithfulness, answer relevancy, context precision) |
 | Containerization | Docker |
 | Deployment | Render |
 
@@ -130,12 +131,30 @@ docker run -p 7860:7860 --env-file .env rag-assistant
 - **Groq for inference**: Chosen for its free tier and very low-latency inference, avoiding the need for paid API credits or local GPU compute.
 - **Static frontend, no framework**: The chat UI is plain HTML/CSS/JS served directly by FastAPI's `StaticFiles`, keeping the deployment single-service and avoiding a separate frontend build/deploy step.
 
+## 📊 Evaluation
+
+The system's accuracy is measured using [Ragas](https://github.com/explodinggradients/ragas), an open-source RAG evaluation framework. `evaluate.py` runs a set of known question/answer pairs against the live app and scores the results on three dimensions:
+
+| Metric | Score | What it measures |
+|---|---|---|
+| **Faithfulness** | 0.60 | Is the answer grounded in the retrieved context, with no hallucination? |
+| **Answer Relevancy** | 0.93 | Does the answer actually address the question asked? |
+| **Context Precision** | 0.50 | Are the retrieved chunks actually the relevant ones? |
+
+**Takeaways from this run:**
+- High answer relevancy shows the LLM stays on-topic and doesn't wander from the question.
+- Faithfulness dips are largely explained by the retriever occasionally missing the exact chunk containing an answer (e.g., the founding year) even when the model's response was otherwise accurate — a retrieval issue rather than a generation issue. Notably, when the retrieved context didn't contain the answer, the model correctly said "I don't know" instead of hallucinating, which faithfulness scored as fully grounded.
+- Context precision is the weakest link, suggesting the biggest accuracy gains would come from better chunking (e.g., smaller/overlapping chunks) or a re-ranking step, rather than changing the LLM.
+
+Run it yourself: `python evaluate.py` (requires the app running locally with a document already uploaded). Full per-question results are saved to `ragas_results.csv`.
+
 ## 🔮 Roadmap
 
-- [ ] RAG evaluation pipeline using Ragas (faithfulness, answer relevancy, context precision)
+- [x] RAG evaluation pipeline using Ragas (faithfulness, answer relevancy, context precision)
 - [ ] Streaming responses
 - [ ] Multi-document conversation memory
 - [ ] Persistent vector storage (currently in-memory per deploy)
+- [ ] Improve context precision via smaller chunk sizes or a re-ranking step
 
 ## 📄 License
 
