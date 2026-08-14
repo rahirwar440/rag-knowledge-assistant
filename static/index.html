@@ -359,13 +359,24 @@
     }
   });
 
+  function formatMarkdown(text) {
+    const escaped = text
+        .replace(/&/g, '&amp;')
+        .replace(/</g, '&lt;')
+        .replace(/>/g, '&gt;');
+
+    return escaped
+        .replace(/\*\*(.+?)\*\*/g, '<strong>$1</strong>')
+        .replace(/\n/g, '<br>');
+}
+
   function addMessage(role, text, sources) {
     const msg = document.createElement('div');
     msg.className = 'msg ' + role;
 
     const bubble = document.createElement('div');
     bubble.className = 'bubble';
-    bubble.textContent = text;
+    bubble.innerHTML = formatMarkdown(text);
     msg.appendChild(bubble);
 
     if (sources && sources.length) {

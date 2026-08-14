@@ -132,7 +132,7 @@ def run_evaluation():
 
     # Wrap Groq and HF embeddings so Ragas can use them as the "judge"
     eval_llm = LangchainLLMWrapper(
-        ChatGroq(groq_api_key=GROQ_API_KEY, model_name="llama-3.1-8b-instant")
+        ChatGroq(groq_api_key=GROQ_API_KEY, model_name="openai/gpt-oss-20b")
     )
     eval_embeddings = LangchainEmbeddingsWrapper(
         HuggingFaceEndpointEmbeddings(

@@ -37,7 +37,7 @@ def get_llm():
     global llm
     if llm is None:
         from langchain_groq import ChatGroq
-        llm = ChatGroq(groq_api_key=groq_api_key, model_name="llama-3.1-8b-instant")
+        llm = ChatGroq(groq_api_key=groq_api_key, model_name="openai/gpt-oss-20b")
     return llm
 
 
