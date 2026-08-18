@@ -17,7 +17,7 @@ User → FastAPI (async) ───┼── CSV  (CSVLoader)      → Chunking �
                           └── URL  (WebBaseLoader)                        ↓
                                                                    ChromaDB (Vector Store)
                                                                             ↓
-User Query → Retriever (top-k similarity search) → Groq LLM (Llama 3.1) → Answer + Sources
+User Query → Retriever (top-k similarity search) → Groq LLM (GPT-OSS 20B) → Answer + Sources
 ```
 
 ## ⚙️ Tech Stack
@@ -29,7 +29,7 @@ User Query → Retriever (top-k similarity search) → Groq LLM (Llama 3.1) → 
 | Orchestration | LangChain |
 | Vector Database | ChromaDB |
 | Embeddings | Hugging Face Inference API (`all-MiniLM-L6-v2`) |
-| LLM | Groq (Llama 3.1 8B Instant) |
+| LLM | Groq (GPT-OSS 20B) |
 | Evaluation | Ragas (faithfulness, answer relevancy, context precision) |
 | Containerization | Docker |
 | Deployment | Render |
@@ -128,7 +128,7 @@ docker run -p 7860:7860 --env-file .env rag-assistant
 
 - **Lazy loading**: Heavy dependencies (LangChain integrations, embedding clients) are imported only when a request actually needs them, rather than at startup. This keeps cold-start times low and memory usage well within free-tier cloud limits — a real constraint encountered and solved during deployment.
 - **API-based embeddings over local models**: Instead of loading a sentence-transformer model in-process (which requires PyTorch and significant RAM), embeddings are generated via the Hugging Face Inference API — keeping the deployed footprint small enough to run on a 512MB instance.
-- **Groq for inference**: Chosen for its free tier and very low-latency inference, avoiding the need for paid API credits or local GPU compute.
+- **Groq for inference**: Chosen for its free tier and very low-latency inference, avoiding the need for paid API credits or local GPU compute. (Originally built on `llama-3.1-8b-instant`; migrated to `openai/gpt-oss-20b` after Groq deprecated the former — a reminder that LLM provider dependencies need ongoing maintenance, not just initial setup.)
 - **Static frontend, no framework**: The chat UI is plain HTML/CSS/JS served directly by FastAPI's `StaticFiles`, keeping the deployment single-service and avoiding a separate frontend build/deploy step.
 
 ## 📊 Evaluation
