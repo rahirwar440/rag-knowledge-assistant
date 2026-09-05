@@ -130,6 +130,7 @@ docker run -p 7860:7860 --env-file .env rag-assistant
 - **API-based embeddings over local models**: Instead of loading a sentence-transformer model in-process (which requires PyTorch and significant RAM), embeddings are generated via the Hugging Face Inference API — keeping the deployed footprint small enough to run on a 512MB instance.
 - **Groq for inference**: Chosen for its free tier and very low-latency inference, avoiding the need for paid API credits or local GPU compute. (Originally built on `llama-3.1-8b-instant`; migrated to `openai/gpt-oss-20b` after Groq deprecated the former — a reminder that LLM provider dependencies need ongoing maintenance, not just initial setup.)
 - **Static frontend, no framework**: The chat UI is plain HTML/CSS/JS served directly by FastAPI's `StaticFiles`, keeping the deployment single-service and avoiding a separate frontend build/deploy step.
+- **Hybrid retrieval + structure-aware chunking for tabular data**: Pure semantic search struggles on documents made of many near-identical structured records (e.g. an employee directory), because a small embedding model can't reliably distinguish "Aditya Rao's row" from "Kavita Mishra's row" when both are structurally similar. Two fixes address this: (1) if the app detects a document with repeated record markers (e.g. `Employee ID:`), it splits on those exact boundaries instead of blind character counts, so no record is ever split mid-way; (2) at query time, if the question contains a likely proper noun, the app does an exact keyword match across all chunks and prioritizes that over pure vector similarity, catching cases embeddings alone would miss.
 
 ## 📊 Evaluation
 
@@ -151,10 +152,10 @@ Run it yourself: `python evaluate.py` (requires the app running locally with a d
 ## 🔮 Roadmap
 
 - [x] RAG evaluation pipeline using Ragas (faithfulness, answer relevancy, context precision)
+- [x] Improve context precision via structure-aware chunking and hybrid (keyword + semantic) retrieval
 - [ ] Streaming responses
 - [ ] Multi-document conversation memory
 - [ ] Persistent vector storage (currently in-memory per deploy)
-- [ ] Improve context precision via smaller chunk sizes or a re-ranking step
 
 ## 📄 License
 
